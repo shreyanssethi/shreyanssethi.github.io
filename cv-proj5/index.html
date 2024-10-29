@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+    <link href="style.css" rel="stylesheet" type="text/css">
+<head>
+    <title>CS 194-26 Project 5: Facial Keypoint Detection with Neural Networks</title>
+</head>
+<body>
+    <h1 style="text-align: center;" >CS194-26 Programming Project #5</h1>
+    <h2 style="text-align: center;" >Facial Keypoint Detection with Neural Networks</h2>
+    <h4 style="text-align: center;" >Shreyans Sethi (SID: 3034163305)</h4>
+    <br>
+    <h2 style="text-align: center;" >Part 1: Nose Tip Detection</h2>
+
+    <p>
+        For the first part of this project, I wrote a custom data loader based on the guidelines provided 
+        <a href = "https://pytorch.org/tutorials/beginner/data_loading_tutorial.html">here</a>
+        so I could sample the data in batches. Once I loaded in the images and nose keypoints from the IMM Face Database,
+        I converted all the images to gratscale and resized the image to (80,60). I also converted it to a Tensor and subtracted 0.5
+        from all the pixel values so that these values would be normalized in the range [-0.5, 0.5]. Below, you can see a few samples 
+        of the images and the nose tip keypoints. 
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/dataloader1.png", width = "400px">
+            <figcaption>Sample 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/dataloader2.png", width = "400px">
+            <figcaption>Sample 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/dataloader3.png", width = "400px">
+            <figcaption>Sample 3</figcaption>
+        </figure>
+    </div>
+    <p>
+        Then I wrote a basic Convolution Neural Network that uses 3 convolutional layers, along with ReLU for non linearity 
+        and max-pooling layers for downsampling after each pass through a convolutional layer. I then have 2 fully connected layers
+        but only use a ReLU after the first one so that we don't restrict our value range. The output of the final layer will be a 
+        length 2 tensor - the (x,y) coordinate of the nose keypoint.
+        The detailed architecture can be seen below:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/architecture.png", width = "700px">
+    </div>
+    <p>
+        As per the spec, I used Adam as the optimizer, Mean Squared Error as the prediction loss and ran 25 epochs at a learning rate of 1e-3
+        with a batch size of 30. That yielded the following loss graph with validation MSE loss reaching 0.00872 in the final epoch and training 
+        MSE loss reaching 0.00815 (The similarity in losses is indication we are not significantly overfitting).
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/Graph of Loss.png", width = "600px">
+    </div>
+    <p>
+        For hyperparameter tuning, I tried to change the learning rate (ranging from 1e-5 to 1e-1) and you can see the respective graphs for the losses 
+        below. Generally, 1e-3 was the best learning rate as it did not jump around as much as 1e-1 and 1e-2 but also converged to lower values than 
+        1e-4 and 1e-5.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/loss1e-1.png", width = "400px">
+            <figcaption>LR = 1e-1 (Note: Y axis is in 1e8 scale)</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/loss1e-2.png", width = "400px">
+            <figcaption>LR = 1e-2</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/Graph of Loss.png", width = "400px">
+            <figcaption>LR = 1e-3</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "part1/loss1e-4.png", width = "400px">
+            <figcaption>LR = 1e-4</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/loss1e-5.png", width = "400px">
+            <figcaption>LR = 1e-5</figcaption>
+        </figure>
+    </div>
+    <p>
+        Another hyperparameter that I tried changing was the kernel size - I tried it at 3x3, 5x5 and 7x7. Changing the kernel 
+        size would change the number of parameters the model has to learn and the computational cost but also the size of the 
+        features that are learned. The final validation losses for these 3 sizes were approximately 0.0093, 0.0060, 0.0071 (the
+        training was re-run several times to see if this ordering would change) which signifies the 5x5 kernel is the most
+        suitable. The graphs of the MSE losses for the different kernel sizes can be seen below:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/loss_kernel_3.png", width = "400px">
+            <figcaption>Kernel Size = 3x3</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/Graph of Loss.png", width = "400px">
+            <figcaption>Kernel Size = 5x5</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/loss_kernel_7.png", width = "400px">
+            <figcaption>Kernel Size = 7x7</figcaption>
+        </figure>
+    </div>
+    <p>
+        Therefore, using a learning rate of 1e-3 and a kernel size of 5x5, I trained the network on the first 192 images 
+        and then used the last 48 as my 'test set'. Below are some of the results I got. You can see that the model 
+        performs well when the subject is facing directly forward or is not tilting their face too much because 
+        the majority of faces in the dataset have this orientation. However, when there is a significant sideways tilt,
+        the prediction is much less accurate. (Note: Predictions are in red and ground truth is green)
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part1/good1.png", width = "400px">
+            <figcaption>Good Example 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/good2.png", width = "400px">
+            <figcaption>Good Example 2</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "part1/bad1.png", width = "400px">
+            <figcaption>Bad Example 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part1/bad2.png", width = "400px">
+            <figcaption>Bad Example 2</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+    <br>
+    <h2 style="text-align: center;" >Part 2: Full Facial Keypoints Detection</h2>
+    <p>
+        For this part of the project, we are trying to predict all the facial keypoints not just the tip of the nose.
+        Therefore, I had to write a new data loader that would load in all these values from the IMM Face Database. From the 
+        last part, we saw that there aren't enough images in the dataset therefore I also used data augmentation this time.
+        <br>
+        <br>
+        Essentially, I looped through all the images in the train set and for each one, I added a color jittered version 
+        (based on this <a href = "https://pytorch.org/vision/stable/_modules/torchvision/transforms/transforms.html#ColorJitter">function</a>)
+        and a randomly translated version. For the translation, I also had to translate the keypoints. This allowed the dataset 
+        to go from 240 images (192 train, 48 test) to 624 images (576 train, 48 test). Below are some sampled images
+        from your dataloader visualized with ground-truth keypoints.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part2/normal_example.png", width = "300px">
+            <figcaption>Normal Image Sample</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/colorjitterexample.png", width = "300px">
+            <figcaption>Color Jittered Sample</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/shifted_example.png", width = "300px">
+            <figcaption>Translated Sample 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/shifted_example2.png", width = "300px">
+            <figcaption>Translated Sample 2</figcaption>
+        </figure>
+    </div>
+
+    <p>
+        For this Part of the project, I used a similar architecture to Part 1 but I added 2 more convolution layers 
+        (for a total of 5) since we need to extract more features from the data now. I tried going upto 7 convolutional layers
+        but saw very minimal changes in the validation loss at the cost of greater training time, which signifies that it
+        probably led to overfitting.  I also did some hyperparameter tuning by trying a range of learning rates and kernel sizes 
+        similar to task 1 and once again, found a kernel_size of 5 to be the best along with a learning rate of 1e-3. 
+        Another thing I tried was changing the batch_size to see the impact on validation and training losses and this 
+        can be seen in a graph below. 
+        <br>
+        <br>
+        The training loss for a batch size of 16 decreases the most quickly but both batch size 32 and 64 eventually reach a 
+        lower training loss. In the validation loss, batch size 64 gets the lowest value eventually but takes the longest to reach 
+        there. Therefore, for my actual predictions, I chose a batch size of 32 as it achieves low loss without requiring 
+        many epochs of training.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part2/training_loss_batches.png", width = "500px">
+            <figcaption>Training Losses vs Batch Size</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/validation_loss_batches.png", width = "500px">
+            <figcaption>Validation Losses vs Batch Size</figcaption>
+        </figure>
+    </div>
+    <p>
+        The final architecture can be seen below. I trained for 15 epochs with learning rate 1e-3 and batch size 32.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part2/architecture.png", width = "700px">
+        </figure>
+    </div>
+    <p>
+        Below are some of the predictions this model generated. Once again, we can see the ones where it performs well 
+        is where the person is looking directly or almost directly forward. This is because despite the data augmentation, 
+        the majority of images in the dataset are still with this facial orientation so the images where it does badly is 
+        where the person is looking sideaways or their head is tilted. In these cases, you can see the model biases towards 
+        the keypoints being in the center.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part2/good_preds1.png", width = "400px">
+            <figcaption>Good Prediction #1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/good_preds2.png", width = "400px">
+            <figcaption>Good Prediction #2</figcaption>
+        </figure>
+    </div>
+
+    <div id = "images">
+        <figure>
+            <img src = "part2/bad_preds1.png", width = "400px">
+            <figcaption>Bad Prediction #1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/bad_preds2.png", width = "400px">
+            <figcaption>Bad Prediction #2</figcaption>
+        </figure>
+    </div>
+    
+
+
+
+    <br>
+    <p>
+        We can also visualize the filters that were learned by the first convolutional layer:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part2/filter0.png", width = "300px">
+            <figcaption>Filter 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter1.png", width = "300px">
+            <figcaption>Filter 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter2.png", width = "300px">
+            <figcaption>Filter 3</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter3.png", width = "300px">
+            <figcaption>Filter 4</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "part2/filter4.png", width = "300px">
+            <figcaption>Filter 5</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter5.png", width = "300px">
+            <figcaption>Filter 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter6.png", width = "300px">
+            <figcaption>Filter 7</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter7.png", width = "300px">
+            <figcaption>Filter 8</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "part2/filter8.png", width = "300px">
+            <figcaption>Filter 9</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter9.png", width = "300px">
+            <figcaption>Filter 10</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter10.png", width = "300px">
+            <figcaption>Filter 11</figcaption>
+        </figure>
+        <figure>
+            <img src = "part2/filter11.png", width = "300px">
+            <figcaption>Filter 12</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+    <br>
+    <h2 style="text-align: center;" >Part 3: Train With Larger Dataset</h2>
+    <p>
+        For this part of the project, we used a much larger dataset (the ibug dataset) which has 6666 images. 
+        While loading these images in, I converted each to grayscale, normalized it, cropped it according to the 
+        given bounding box and then resized it into a 224 x 224 image. This also meant the facial keypoints had 
+        to be adjusted to this new size and crop dimensions. Then, I performed data augmentation similar to Task 2
+        to add color jittered and randomly translated versions of the images. Some samples from the dataset can 
+        be seen below with the ground truth markings.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/sample1.png", width = "300px">
+            <figcaption>Sample 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "part3/sample2.png", width = "300px">
+            <figcaption>Sample 2 (Randomly Translated)</figcaption>
+        </figure>
+        <figure>
+            <img src = "part3/sample3.png", width = "300px">
+            <figcaption>Sample 3 (Color Jittered)</figcaption>
+        </figure>
+        <figure>
+            <img src = "part3/sample5.png", width = "300px">
+            <figcaption>Sample 4 (Randomly Translated)</figcaption>
+        </figure>
+    </div>
+    <p>
+        For the actual CNN, as per the guidance in the spec, I chose to build on the existing ResNet model which is used 
+        often for computer vision. The only changes I made were to add an extra convolutional layer in the beginning 
+        and a fully connected layer at the end. The reason behind doing so was so I could only pass in 1 channel 
+        (as the image is greyscale) and get an output in the desired shape (58 keypoints x 2 points for each). For the hyperparameters,
+        since the model takes ~1-2 hours to train, I was not able to do full hyperparameter tuning but tested the training loss 
+        on small subsets of the data and chose the following parameters: Learning rate 1e-3, Batch size 64 and 10 epochs. 
+        The detailed architecture can be seen below:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/arch1.png", width = "400px">
+        </figure>
+        <figure>
+            <img src = "part3/arch2.png", width = "400px">
+        </figure>
+    </div>
+    <p>
+        After running the model for 10 epochs, the following was the change in the Training MSE loss:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/loss_graphs.png", width = "600px">
+        </figure>
+    </div>
+    <p>
+        We can also visualize the results on some of the images in the test set. Generally, the model performs well 
+        but trends to struggle in distinguishing between the chin and the lips since they have similar shapes and 
+        could both be recognized by the same filter, which leads to some of the errors.
+    </p>
+    <p>
+        Some of the strong examples:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/example1.png", width = "300px">
+        </figure>
+        <figure>
+            <img src = "part3/example2.png", width = "300px">
+        </figure>
+        <figure>
+            <img src = "part3/example3.png", width = "300px">
+        </figure>
+        <figure>
+            <img src = "part3/example4.png", width = "300px">
+        </figure>
+    </div>
+    <p>
+        Less successful examples (All of them detecting the keypoints higher than they actually are):
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/bad1.png", width = "400px">
+        </figure>
+        <figure>
+            <img src = "part3/bad2.png", width = "400px">
+        </figure>
+        <figure>
+            <img src = "part3/bad3.png", width = "400px">
+        </figure>
+    </div>
+    <br>
+    <p>
+        On submitting to Kaggle, my MSE score was 57.05850 and my submission was under "Shreyans Sethi" 
+        <a href="https://www.kaggle.com/c/cs194-26-fall-2021-project-5/leaderboard">here.</a>
+        I also used the trained model to predict the keypoints on some of my own images and the results can be seen below. 
+        In the first image on the left, it gets the width of the face generally right and it is interesting to see 
+        that it tries to predict the placement of the eyes despite the sunglasses. In all 3 images, the eyebrows are very well matched
+        whereas lip predictions are lower than they should be. Eyes are succesful for the right image but not as much for the 
+        middle image.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "part3/face1_pred.png", width = "400px">
+        </figure>
+        <figure>
+            <img src = "part3/face2_pred.png", width = "400px">
+        </figure>
+        <figure>
+            <img src = "part3/face3_pred.png", width = "400px">
+        </figure>
+    </div>
+
+
+
+</body>
+</html>

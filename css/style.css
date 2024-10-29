@@ -1,3 +1,4 @@
+/* Reset basic styling */
 * {
     margin: 0;
     padding: 0;
@@ -5,55 +6,94 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     background-color: #f4f4f9;
     color: #333;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
     margin: 0;
 }
 
-/* Center container */
-.container {
+/* Intro Section (Title, Bio, and Image) */
+.top-section {
     text-align: center;
     padding: 2rem;
-    max-width: 600px;
     background-color: #fff;
+    width: 100%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    border-bottom: 1px solid #ddd;
 }
 
-/* Typography */
-h1 {
-    font-size: 2.5rem;
-    color: #333;
+.profile-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
     margin-bottom: 1rem;
 }
 
-p {
+.header-content h1 {
+    font-size: 2.5rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.header-content h2 {
+    font-size: 1rem;
+    font-style: italic;
+    color: rgb(120, 118, 118);
+    font-weight: 250;
+    margin-bottom: 0.5rem;
+}
+
+.header-content p {
     font-size: 1.1rem;
-    line-height: 1.6;
+    line-height: 1.8;
     color: #666;
-    margin-bottom: 1.5rem;
 }
 
-h2 {
-    font-size: 1.8rem;
+/* Panels Section */
+.content-section {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1200px;
+    margin: 2rem auto;
+    gap: 1.5rem;
+}
+
+.panel {
+    background-color: #fff;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+}
+
+.panel h2 {
+    font-size: 1.5rem;
+    font-weight: 700; 
     color: #444;
-    margin-top: 2rem;
+    margin-bottom: 1rem;
 }
 
-/* Links */
-a {
+.panel p, .panel ul {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.5;
+}
+
+.panel a {
     color: #3498db;
     text-decoration: none;
     font-weight: bold;
     transition: color 0.3s ease;
 }
 
-a:hover {
+.panel a:hover {
     color: #2980b9;
 }
 
@@ -64,4 +104,47 @@ ul {
 
 ul li {
     margin: 0.5rem 0;
+}
+
+/* Contact Section */
+.contact-section {
+    background-color: #fff;
+    width: 100%;
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #ddd;
+}
+
+.contact-section h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.contact-section p {
+    font-size: 1rem;
+}
+
+.contact-section a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-section a:hover {
+    color: #2980b9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .panel {
+        max-width: 90%;
+    }
 }

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+    <link href="style.css" rel="stylesheet" type="text/css">
+<head>
+    <title>CS 194-26 Project 2: Fun with Filters and Frequencies</title>
+</head>
+<body>
+    <h1 style="text-align: center;" >CS194-26 Programming Project #2</h1>
+    <h2 style="text-align: center;" >Fun with Filters and Frequencies!</h2>
+    <h4 style="text-align: center;" >Shreyans Sethi (SID: 3034163305)</h4>
+
+    <h2 style="text-align: left;" >Part 1: Fun with Filters</h2>
+    <h4 style="text-align: left;" >1.1 - Finite Difference Operator</h2>
+    <p>
+        The gradient magnitude computation was done by firstly convolving the image in the X and Y direction with the
+        Dx = [1 -1] and Dy = [1 -1].T matrices respectively. This was equivalent to finding the partial derivatives
+        with respect to X and Y. I then combined these two partial derivatives by taking the magnitude -->
+        (Partial_X^2 + Partial_Y^2)^0.5. The magnitude will be greatest in the areas with the most change and therefore,
+        finding this magnitude is similar to an edge detector as edges have rapid change. To actually turn it into an edge image,
+        I binarized the gradient magnitude image by setting all values above a certain threshhold to 1 and everything below to 0.
+        This threshhold was found simply through trial and error, and as can be seen by the below results, it does work to a
+        certain extent but it is rather noisy because of the noise in the original image.
+    </p>
+    <p style="text-align: center;">
+        <img src = "cameraman.png", width = "500px">
+        <figcaption style="text-align: center;">Original Cameraman Image</figcaption>
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "cameraman_outputs/cameraman-dx.jpeg", width = "400px">
+            <figcaption>Partial X Derivative</figcaption>
+        </figure>
+        <figure>
+            <img src = "cameraman_outputs/cameraman-dy.jpeg", width = "400px">
+            <figcaption>Partial Y Derivative</figcaption>
+        </figure>
+        <figure>
+            <img src = "cameraman_outputs/cameraman-dx-dy-combined.jpeg", width = "400px">
+            <figcaption>Gradient Magnitude Image</figcaption>
+        </figure>
+    </div>
+    <p style="text-align: center;">
+        <img src = "cameraman_outputs/threshhold.jpeg", width = "500px">
+        <figcaption style="text-align: center;">Binarized Gradient Magnitude</figcaption>
+    </p>
+
+
+    <h4 style="text-align: left;" >1.2 - Derivative of Gaussian (DoG) Filter</h2>
+    <p>
+        To improve the issues with noise in the previous section, we will now convolve our cameraman image with
+        a Gaussian filter before taking its Partial X and Y derivatives, finding the magnitude, and binarizing.
+        Convolving with a Gaussian filter is essentially blurring the image or smoothening it, and this will remove
+        a lot of the previously seen noise, which should lead to a cleaner edge image.
+    </p>
+    <p style="text-align: center;">
+        <img src = "cameraman_outputs/cameraman-smooth.jpeg", width = "500px">
+        <figcaption style="text-align: center;">Blurred Cameraman Image</figcaption>
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "cameraman_outputs/cameraman-dx-smooth.jpeg", width = "400px">
+            <figcaption>Partial X Derivative of Blurred Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "cameraman_outputs/cameraman-dy-smooth.jpeg", width = "400px">
+            <figcaption>Partial Y Derivative of Blurred Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "cameraman_outputs/smooth_gradient_magnitude.jpeg", width = "400px">
+            <figcaption>Gradient Magnitude Image of Blurred Image</figcaption>
+        </figure>
+    </div>
+    <p>
+        Comparing the Edge image to the one from the previous section, we can see that the lines are a lot smoother
+        and a lot of the noise in the sky and the grass has been removed due to the blurring. Furthermore, the main subject
+        of the image - the cameraman and his camera - is where most of the edges have been defined. However, this has come
+        at the cost of some of the edge detection in the background (in the buildings, etc.) being lost since the blurring process
+        did not preserve the differences in the pixels there.
+
+        We can also use a second approach to compute this edge image where we first compute the partial X and Y derivatives
+        of the Gaussian filter (by convolving with Dx and Dy) and then convolve the cameraman image with this gradient Gaussian.
+        This will get the same exact result as seen below due to convolving being associative.
+    </p>
+    <p style="text-align: center;">
+        <img src = "cameraman_outputs/threshhold_smooth.jpeg", width = "500px">
+        <figcaption style="text-align: center;">Binarized Gradient Magnitude of Blurred Image</figcaption>
+    </p>
+    <p style="text-align: center;">
+        <img src = "cameraman_outputs/threshhold_smooth_2.jpeg", width = "500px">
+        <figcaption style="text-align: center;">Approach 2: Binarized Gradient Magnitude of Blurred Image</figcaption>
+    </p>
+    <br>
+    <br>
+
+    <h2 style="text-align: left;" >Part 2: Fun with Frequencies!</h2>
+    <h4 style="text-align: left;" >2.1 - Image Sharpening</h4>
+
+
+    <p>
+        To sharpen these images, we create a unsharp mask filter by using the following formula:
+    </p>
+    <p>
+        unsharp_mask_filter = (1+alpha)*unit_impulse - (alpha*gaussian_filter)
+    </p>
+    <p>
+        Essentially, this filter takes the unit impulse (the identity filter), adds alpha to its only non-zero entry,
+        and then subtracts away the gaussian filter scaled by alpha. Convolving with this unsharp mask filter will "sharpen" the image
+        as you're obtaining and adding more of the high frequencies into the image. Alpha becomes a parameter for the sharpening (as alpha
+        increases, the more the image is sharpened. It can be seen that with extremely high alpha values, the image looks
+        very artificially sharpened instead of it being  a naturally sharp photo. You can see the results for a series of images below:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "taj.jpeg", width = "400px">
+            <figcaption>Original Taj Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/sharp_taj.jpeg", width = "400px">
+            <figcaption>Sharpened Taj (Alpha = 0.8)</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/sharp_taj_2.jpeg", width = "400px">
+            <figcaption>Sharpened Taj (Alpha = 2)</figcaption>
+        </figure>
+    </div>
+
+    <div id = "images">
+        <figure>
+            <img src = "campanile.jpeg", width = "400px">
+            <figcaption>Original Campanile Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/campanile_sharp.jpeg", width = "400px">
+            <figcaption>Sharpened Campanile (Alpha = 0.8)</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/campanile_sharp_2.jpeg", width = "400px">
+            <figcaption>Sharpened Campanile (Alpha = 2)</figcaption>
+        </figure>
+    </div>
+
+    <div id = "images">
+        <figure>
+            <img src = "burrito.jpeg", width = "400px">
+            <figcaption>Original Burrito Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/burrito_sharp.jpeg", width = "400px">
+            <figcaption>Sharpened Burrito (Alpha = 0.8)</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/burrito_sharp_2.jpeg", width = "400px">
+            <figcaption>Sharpened Burrito (Alpha = 2)</figcaption>
+        </figure>
+    </div>
+    <br>
+    <p>
+        I then tried to take an image, blur it (by convolving it with a Gaussian filter), and then use the unsharp
+        mask filter on the blurred image. All the stages of this process can be seen through the images below. In general,
+        it was found that taking the blurred image back to a sharp one required a much larger alpha value than for the previous images
+        (Alpha = 10). Furthermore, since the high frequencies are removed during the blurring process, using the unsharp mask filter afterwards
+        is not the same as reverting the image to its original version because you have simply lost some of the frequencies
+        to work with. It can be seen that this leads to some artifical effects such as the dog's hair near his back paws
+        being sharpened even though they weren't in the original image due to the depth of field.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "puppy.jpeg", width = "500px">
+            <figcaption>Original Puppy Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/blurry_puppy.jpeg", width = "500px">
+            <figcaption>Blurred Puppy</figcaption>
+        </figure>
+        <figure>
+            <img src = "sharpened_outputs/sharpened_puppy.jpeg", width = "500px">
+            <figcaption>Sharpened Blurry Puppy (Alpha = 10)</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+    <h4 style="text-align: left;" >2.2 - Hybrid Images</h4>
+    <p>
+        For this part of the project, we try to create 'hybrid images' by applying a high-pass filter to one image
+        and a low-pass filter to another. For the low-pass filter, we convolve the image with a Gaussian filter whereas
+        for the high pass filter, we convolve the image with a Laplacian filter (unit impulse - gaussian).  We then add
+        the values of the two images and this should result in an effect where the high-pass image can be seen from
+        closer whereas the low-pass can be seen from further away. I also used the provided alignment code to align
+        the images based on some chosen points (For the cat and Derek, I chose the alignment points as the pupils) so that
+        the effect is more convincing. One change I made was to clip away any values below 0 and above 1 after the
+        respective convolutions.
+
+    </p>
+
+    <h4 style="text-align: center;" >Derek and Nugget</h4>
+    <p>
+        The respective sigma values were 30 for Nugget and 10 for Derek, with the Kernel sizes being 6 times the set sigma
+        value. A range of kernel sizes and sigma values were tried and these were found to be the most visually succesful.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/grey_derek.jpeg", width = "300px">
+            <figcaption>Aligned Derek</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/grey_cat.jpeg", width = "300px">
+            <figcaption>Aligned Nugget</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/high_pass_cat.jpeg", width = "300px">
+            <figcaption>High-Pass Filtered Nugget</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/low_pass_derek.jpeg", width = "300px">
+            <figcaption>Low-Pass Filtered Derek</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/hybrid_reference.jpeg", width = "300px">
+            <figcaption>Hybrid</figcaption>
+        </figure>
+    </div>
+
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/derek_fourier.jpeg", width = "500px">
+            <figcaption>Derek in Fourier Space</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/nugget_fourier.jpeg", width = "500px">
+            <figcaption>Nugget in Fourier Space</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/nugget_high_fourier.jpeg", width = "500px">
+            <figcaption>High-Pass Filtered Nugget in Fourier Space</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/derek_low_fourier.jpeg", width = "500px">
+            <figcaption>Low-Pass Filtered Derek in Fourier Space</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/hybrid_fourier.jpeg", width = "500px">
+            <figcaption>Hybrid in Fourier Space</figcaption>
+        </figure>
+    </div>
+
+    <h4 style="text-align: center;" >The Hidden Horcrux</h4>
+    <p>
+        This example also worked fairly well and it was dependent upon choosing images with similar face sizes
+        for both Harry and Voldemort so that the alignment would be more succesful. One shortcoming is that even at distance,
+        Harry's eyes can be seen on Voldy's face and this could be because the low-pass filtered Voldemort is very dark
+        in the eye region.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/grey_harry.jpeg", width = "300px">
+            <figcaption>Original Harry</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/grey_voldy.jpeg", width = "300px">
+            <figcaption>Original Voldy</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/high_pass_harry.jpeg", width = "300px">
+            <figcaption>High-Pass Filtered Harry</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/low_pass_voldy.jpeg", width = "300px">
+            <figcaption>Low-Pass Filtered Voldy</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/horcrux.jpeg", width = "300px">
+            <figcaption>Hybrid</figcaption>
+        </figure>
+    </div>
+    <h4 style="text-align: center;" >The Greatest of All Time</h4>
+    <p>
+        This was a much less successful example because the goat's features can be seen even from a close distance.
+        A variety of things were tried to fix this: Swapping which image was the high-pass and which was the low-pass,
+        increasing the sigma and kernel size so the low-pass image is blurred more, aligning the images more closely.
+        However, the overall effect is still not extremely convincing and this could be because the shapes of the faces
+        are clearly different and the goat's image just being darker to start with, which contrasts with Messi's lighter
+        image.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/grey_messi.jpeg", width = "300px">
+            <figcaption>Original Messi</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/grey_goat.jpeg", width = "300px">
+            <figcaption>Original Goat</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "hybrid/high_pass_messi.jpeg", width = "300px">
+            <figcaption>High-Pass Filtered Messi</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/low_pass_goat.jpeg", width = "300px">
+            <figcaption>Low-Pass Filtered Goat</figcaption>
+        </figure>
+        <figure>
+            <img src = "hybrid/better_than_ronaldo.jpeg", width = "300px">
+            <figcaption>Hybrid</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+
+    <h4 style="text-align: left;" >2.3 - Gaussian and Laplacian Stacks</h4>
+    <p>
+        The Gaussian stack was implemented by repeatedly convolving the input image with a Gaussian filter, where each layer represents an additional
+        convolution pass. Therefore, at each layer, the image gets more and more blurred.  Between these layers, the size of the image remains the same
+        which is why it is a stack not a pyramind. The Laplacian stack was implemented by taking the difference between sequential Gaussian layers. i.e
+        The first layer of the Laplacian stack is the Gauss_layer_1 - Gauss_layer_2. The last layer of the Laplacian stack is the same as the Gaussian stack,
+        as it is simply the lowest frequencies. Each layer of the Laplacian stack then acts like a Band-Pass filter
+        as it will only capture those specific range of frequencies. For this section, I found a Laplacian stack for the Apple and the Orange respectively,
+        and then masked each layer using the Gaussian stack for the mask (A split black-white image). You can then combined these mask-weighted layers to blend
+        the images at all the different layers. You can see that for the higher frequencies, the spline is very visible whereas for the lower frequencies,
+        it's harder to see because of the blurring of the mask.
+
+        (Lower layer numbers correspond to higher frequencies, whereas higher layer numbers are the lower frequencies)
+    </p>
+    <p>
+        Laplacian Stack Layers for Apple Image:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/apple_layer_0.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/apple_layer_2.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/apple_layer_4.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/apple_layer_6.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/apple_layer_8.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 8</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/apple_layer_10.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 10</figcaption>
+        </figure>
+    </div>
+    <p>
+        Masked Laplacian Stack Layers for Apple Image:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/oraple_layers/first_image_0.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/first_image_2.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/first_image_4.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/first_image_6.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/first_image_8.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 8</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/first_image_10.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 10</figcaption>
+        </figure>
+    </div>
+    <p>
+        Laplacian Stack Layers for Orange Image:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/orange_layer_0.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_layer_2.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_layer_4.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_layer_6.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_layer_8.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 8</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_layer_10.jpeg", width = "180px">
+            <figcaption>Laplacian Stack Layer 10</figcaption>
+        </figure>
+    </div>
+    <p>
+        Masked Laplacian Stack Layers for Orange Image:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/oraple_layers/second_image_0.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/second_image_2.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/second_image_4.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/second_image_6.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/second_image_8.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 8</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oraple_layers/second_image_10.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 10</figcaption>
+        </figure>
+    </div>
+    <p>
+        Blending at Different Frequency Levels:
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/blended_layer_0.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/blended_layer_2.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/blended_layer_4.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/blended_layer_6.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 6</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/blended_layer_8.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 8</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/blended_layer_10.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 10</figcaption>
+        </figure>
+    </div>
+    <h4 style="text-align: left;" >2.4 - Multiresolution Blending (a.k.a. the oraple!)</h4>
+    <p>
+        For the Multiresolution blending, you just take all the different blended layers (from the previous section), and add them all up to create
+        one blended image at many resolutions. Below it can be seen in greyscale and color (for extra credit). In my opinion, the color version is
+        much more satisfying as you can see the transition between the fruits and the effect of the gradual blend more clearly.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/apple_export.jpeg", width = "300px">
+            <figcaption>Original Apple</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orange_export.jpeg", width = "300px">
+            <figcaption>Original Orange</figcaption>
+        </figure>
+        <figure>
+            <img style="border:1px solid black;" src = "blending/orapple_mask.jpeg", width = "300px">
+            <figcaption>Mask Used for Blend</figcaption>
+        </figure>
+    </div>
+
+    <div id = "images">
+        <figure>
+            <img src = "blending/orapple_final_gray.jpeg", width = "500px">
+            <figcaption>The Oraple!</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/orapple_final.jpeg", width = "500px">
+            <figcaption>The Oraple in Color (Bells and Whistles)!</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+    <h4 style="text-align: left;" >2.4 - Multiresolution Blending - Other Examples</h4>
+    <b>Majestic Oski (Using Irregular Mask)</b>
+    <p>
+        This blend attempt taught me that both images must be compatible in their color palette and lighting. Here, Oski's face is mostly brown
+        whereas the sky around him is blue/purple which is why the blend is a bit more jarring.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/oski.jpg", width = "300px">
+            <figcaption>Oski Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/sky.jpg", width = "300px">
+            <figcaption>Sky Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/mask-oski.jpg", width = "300px">
+            <figcaption>Blending Mask</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/oski_blend_result.jpeg", width = "300px">
+            <figcaption>Blended Result!</figcaption>
+        </figure>
+    </div>
+
+    <b>Angry Cat (Using Circular Mask)</b>
+    <div id = "images">
+        <figure>
+            <img src = "blending/cat.jpg", width = "300px">
+            <figcaption>Cat Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/fire.jpg", width = "300px">
+            <figcaption>Sauron's Eyes Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/cat_mask.jpg", width = "300px">
+            <figcaption>Blending Mask</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/cat_blend_result.jpeg", width = "300px">
+            <figcaption>Blended Result!</figcaption>
+        </figure>
+    </div>
+
+    <b>Mer-Man (Using Linear Mask)</b>
+    <div id = "images">
+        <figure>
+            <img src = "blending/red_man.jpg", width = "300px">
+            <figcaption>Man Image</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/fish.jpg", width = "300px">
+            <figcaption>Fish Image</figcaption>
+        </figure>
+        <figure>
+            <img style="border:1px solid black;" src = "blending/fish_mask.jpg", width = "300px">
+            <figcaption>Blending Mask</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_final.jpeg", width = "300px">
+            <figcaption>Blended Result!</figcaption>
+        </figure>
+    </div>
+
+    <b>Mer-Man Laplacian Stack</b>
+    <p>
+        You can see that on the higher frequencies, the extra fin (below the man's right arm) is not visible because the mask weighting is not as gradual.
+        However, on the lower frequencies, this extra fin becomes more visible because the window size is larger and the image is more blurred. Although this
+        is useful in make the blend more gradual, it also results in this blurred fin artifact in the blended image which is not ideal. This could be fixed
+        through placing the mask more carefully though.
+    </p>
+    <div id = "images">
+        <figure>
+            <img src = "blending/merman_layers/first_image_0.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/first_image_1.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/first_image_2.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/first_image_3.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 3</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/first_image_4.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/first_image_5.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 5</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "blending/merman_layers/second_image_0.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/second_image_1.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/second_image_2.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/second_image_3.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 3</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/second_image_4.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/second_image_5.jpeg", width = "180px">
+            <figcaption>Masked Laplacian Stack Layer 5</figcaption>
+        </figure>
+    </div>
+    <div id = "images">
+        <figure>
+            <img src = "blending/merman_layers/blend_layer0.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 0</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/blend_layer1.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 1</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/blend_layer2.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 2</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/blend_layer3.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 3</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/blend_layer4.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 4</figcaption>
+        </figure>
+        <figure>
+            <img src = "blending/merman_layers/blend_layer5.jpeg", width = "180px">
+            <figcaption>Weighted Blend on Layer 5</figcaption>
+        </figure>
+    </div>
+    <br>
+    <br>
+    <br>
+    <h4 style="text-align: left;" >Bells and Whistles</h4>
+    <p>
+        For the extra credit part of this Project, I chose to implement multi resolution blending with color.
+        Multiple examples of this can be seen in the previous section.
+    </p>
+    <br>
+    <h4 style="text-align: left;" >Most Important Thing I Learned</h4>
+    <p>
+        I learned a lot through this project, especially because as an amateur photographer, I tend to use Adobe
+        Lightroom a lot. Effects that I commonly play with such as the Sharpening and Blurring filter are so much more
+        interesting to me now because I know the actual computations that are behind them. However, the most important thing
+        that I learned in this project is that even with all these mathematical computations, human input and qualitative
+        evaluation is still needed quite often. For example, I implemented a multi resolution blending algorithm but the
+        way I chose the proper kernel size and sigma values was just by trying out a bunch of different ones and seeing
+        which looked best to my eye. This was the same approach I used to decide the alpha values for my unsharp mask filter.
+        Although computers are very impressive in terms of how fast they can do these computations, humans are still needed
+        to decide what 'looks best'.
+    </p>
+    <br>
+    <h4 style="text-align: left;" >Credit for Images Used</h4>
+    <p>
+        Cameraman --> Provided through project spec <br>
+        Taj Mahal --> Provided through project spec <br>
+        Campanile --> https://twitter.com/ucb_campanile <br>
+        Burrito --> https://www.savemart.com/recipes/breakfast-burritos/11362 <br>
+        Puppy --> https://www.thepedigreepaws.com/dog-breeds/alaskan-malamute <br>
+        Derek and Nugget --> Provided through project spec <br>
+        Harry Potter --> https://www.irishtimes.com/culture/books/harry-potter-is-there-a-less-appealing-fictional-character-1.3170112 <br>
+        Tom Riddle --> https://harrypotter.fandom.com/wiki/Tom_Riddle <br>
+        Messi --> https://www.biography.com/athlete/lionel-messi
+        Goat --> https://fineartamerica.com/featured/goat-headshot-sherri-brown.html <br>
+        Apple and Orange --> Provided through Course Spec <br>
+        Oski --> https://www.dailycal.org/2016/04/01/oski-no-longer-cals-mascot/ <br>
+        Sunset Sky --> https://www.istockphoto.com/photos/sunrise-sunset
+        Cat Headshot --> https://www.shutterstock.com/image-photo/close-maine-coon-looking-camera-isolated-635622530 <br>
+        Eye of Sauron --> https://www.vhv.rs/viewpic/hoTThT_eye-of-sauron-transparent-hd-png-download/ <br>
+        Fish --> https://www.carlswebgraphics.com/fish.html <br>
+        Man in Red Shirt --> https://fr.123rf.com/photo_55148486_rire-homme-barbu-avec-le-chapeau-en-regardant-la-cam%C3%A9ra-corps-plein-longueur-portrait-isol%C3%A9-sur-fond-bla.html <br>
+
+
+
+
+
+    </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+
+
+
+
+
+
+</html>

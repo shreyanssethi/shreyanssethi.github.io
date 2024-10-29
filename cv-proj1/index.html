@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> CS 194-26 Project 1 - Shreyans Sethi </title>
+  </head>
+  <body>
+    <h1>Project 1 - Colorizing the Prokudin-Gorskii photo collection</h1>
+    <h2>CS194-26: Image Manipulation and Computational Photography</h2>
+    <h4>Shreyans Sethi (SID: 3034163305)</h4>
+    <hr>
+    <h4>Overview of Project</h4>
+    <p>
+      This project was surrounding the Prokudin-Gorskii glass plate images, in which he photographed various
+      subjects using 3 separate filters - Red, Blue, and Green. This project implements an alignment algorithm to combine
+      these 3 images into 1 colored photograph. The algorithm should give a final image that looks visually well-aligned
+      but also runs in <= 1 minute on large TIF format images
+    </p>
+
+    <h4>Approach Used</h4>
+    <p>
+      For smaller JPEG images, the algorithm I implemented does the following: It defines a base channel (usually the blue image) and an 'other' channel (red/green usually). It then displaces
+          the other channel by +/- 30 pixels in the x, y directions and for each of these displacements, it calculates
+          the L2 norm between the base and other channel. This metric is only calculated for a window in the middle of the image
+          which is 1/4th the size of the overall image (since the edges of the image contain artifacts and borders which do not
+          work well with the metric). The displacement vector with the lowest L2 norm is retained and the other channel is adjusted
+          using it.
+    </p>
+    <p>
+      For larger TIF images, an image pyramid was implemented (to decrease run-time) which works as follows: Both channels are scaled down to a factor of 1/32. The displacement search process from above runs again
+          but this time only searching +/- 5 pixels in the x, y directions. The other channel is then displaced using the
+          vector with the lowest L2 norm. This process repeats as both channels go 'down the pyramid' to scales of 1/16th, 1/8th, 1/4th, 1/2 and then
+          at the original size. At each layer, the best displacement vector is found, the other channel is adjusted,
+          and then passed down to the next layer. The factor (1/32) was chosen because a 5 pixel displacement at this level means a 5*32 = 160 pixel level displacement
+      at the original size. Through manual tuning, it was seen that only going till the (1/16th) factor left some photos
+      misaligned whereas the (1/64th) level took too long.
+    </p>
+
+    <h4>Results on Smaller JPEG Images</h4>
+
+    <figure>
+      <img src="aligned/cathedral.jpeg" alt='missing' />
+      <figcaption>Red Displacement = [3, 12], Green Displacement = [2, 5]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/monastery.jpeg" alt='missing' />
+      <figcaption>Red Displacement = [2, 3], Green Displacement = [2, -3]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/tobolsk.jpeg" alt='missing' />
+      <figcaption>Red Displacement = [3, 7], Green Displacement = [3, 3]</figcaption>
+    </figure>
+
+
+    <h4>Results on Larger TIF Images</h4>
+    <figure>
+      <img src="aligned/church.jpeg" alt='missing' width="400" />
+      <figcaption>Red Displacement = [-4, 58], Green Displacement = [4, 25] </figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/harvesters.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [14, 123], Green Displacement = [17, 59]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/icon.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [23, 89], Green Displacement = [17, 41]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/lady.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [12, 114], Green Displacement = [8, 55]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/melons.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [14, 178], Green Displacement = [10, 81]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/onion_church.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [37, 108], Green Displacement = [27, 51]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/self_portrait.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [37, 175], Green Displacement = [29, 78]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/three_generations.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [12, 111], Green Displacement = [14, 52]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/train.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [32, 86], Green Displacement = [6, 42]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/workshop.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [-12, 106], Green Displacement = [-1, 53]</figcaption>
+    </figure>
+
+    <h4>Emir Photo</h4>
+    <p>
+      The one image that still did not have strong results even with the image pyramind was the one of Emir. After closer
+      inspection of the source image, it could be seen that his blue outfit meant that the values in the blue channel were
+      very high whereas they corresponding pixels in the red channel were very low. This meant that the displacement vector
+      found was not suitable. To fix this, I changed the base channel to green then aligned green-blue and green-red. This
+      yielded much stronger results.
+    </p>
+    <figure>
+      <img src="aligned/original_emir.jpeg" style="width: 30%; margin-right: 1%; margin-bottom: 0.5em;" />
+      <figcaption>Version 0: Stacked Photo without alignment </figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/emir.jpeg" style="width: 30%; margin-right: 1%; margin-bottom: 0.5em;" />
+      <figcaption>Version 1: Red Displacement = [39, 71], Green Displacement = [24, 48] </figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/better_emir.jpeg" style="width: 30%; margin-right: 1%; margin-bottom: 0.5em;" />
+      <figcaption>Version 2: Red Displacement = [17, 57], Blue Displacement = [-24, -48] </figcaption>
+    </figure>
+    <p style="clear: both;">
+
+
+    <h4>Other Photos From The Collection</h4>
+    <figure>
+      <img src="aligned/castle.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [5, 98], Green Displacement = [3, 34]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/suna_river.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [-11, 102], Green Displacement = [-5, 25]</figcaption>
+    </figure>
+    <figure>
+      <img src="aligned/sunset.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [28, -315], Green Displacement = [24, 43]</figcaption>
+    </figure>
+    <p>It can be seen that for the sunset image, the alignment did not go well. The same attempt was tried as the
+      Emir photo where the base channel was changed to green instead. Once again, this strategy worked and the resultant
+      alignment was a lot more visually satisfying.
+    </p>
+    <figure>
+      <img src="aligned/better_sunset.jpeg" alt='missing' width="400"/>
+      <figcaption>Red Displacement = [28, -315], Green Displacement = [24, 43]</figcaption>
+    </figure>
+
+    <hr>
+    <h3>Bells and Whistles - Extra Credit</h3>
+      <p>
+        For extra credit, I decided to implement a function that would improve the dynamic range of the images by making all the pixel values fit in the full range [0,1]. This is inspired by the histogram equalization process we learned in class where we remap each of the pixel values into the full interval. Similarly, for each of the R,G,B channels, I rescaled all the values in the 2D array to be within this new range to get deeper shadows and brighter highlights. This helped make the final picture more contrast-y and less flat.
+      </p>
+      <figure>
+        <img src="dynamic/workshop_before.jpeg" alt='missing' width="400"/>
+        <figcaption>BEFORE</figcaption>
+      </figure>
+      <figure>
+        <img src="dynamic/workshop.jpeg" alt='missing' width="400"/>
+        <figcaption>AFTER: Notice how under the table, it gets darker in the shadows</figcaption>
+      </figure>
+
+      <figure>
+        <img src="dynamic/lady_before.jpeg" alt='missing' width="400"/>
+        <figcaption>BEFORE</figcaption>
+      </figure>
+      <figure>
+        <img src="dynamic/lady.jpeg" alt='missing' width="400"/>
+        <figcaption>AFTER: The lady's face gets visibly brighter!</figcaption>
+      </figure>
+
+      <figure>
+        <img src="dynamic/self_portrait_before.jpeg" alt='missing' width="400"/>
+        <figcaption>BEFORE</figcaption>
+      </figure>
+      <figure>
+        <img src="dynamic/self_portrait.jpeg" alt='missing' width="400"/>
+        <figcaption>AFTER: You can see how the water gets darker in some parts</figcaption>
+      </figure>
+
+    </body>
+</html>
